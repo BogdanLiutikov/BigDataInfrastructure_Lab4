@@ -18,6 +18,7 @@ class DataPreprocessor:
                                                             test_size=test_size, random_state=seed)
         self.splited_data: tuple[pd.DataFrame, ...] = (X_train, X_test,
                                                        y_train, y_test)
+        return self.splited_data
 
     def standard_data(self):
         X_train, X_test, y_train, y_test = self.splited_data
@@ -28,6 +29,7 @@ class DataPreprocessor:
         X_test = pd.DataFrame(standard_scaler.transform(X_test),
                               columns=column_names)
         self.splited_data = X_train, X_test, y_train, y_test
+        return self.splited_data
 
     def save_data(self, path: str):
         X_train, X_test, y_train, y_test = self.splited_data

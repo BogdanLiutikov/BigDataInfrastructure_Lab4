@@ -2,22 +2,15 @@ import argparse
 import pickle
 import sys
 from configparser import ConfigParser
-from datetime import datetime
 
 import numpy as np
 from sklearn.base import BaseEstimator
-
-# from logger import Logger
-
-SHOW_LOG = True
 
 
 class Predictor():
 
     def __init__(self) -> None:
-        # logger = Logger(SHOW_LOG)
         self.config = ConfigParser()
-        # self.log = logger.get_logger(__name__)
         self.config.read("config.ini")
         self.parser = argparse.ArgumentParser(description="Predictor")
         self.parser.add_argument("-m",
@@ -29,7 +22,7 @@ class Predictor():
                                  nargs="?",
                                  choices=["RandomForestClassifier"])
 
-    def predict(self, vector) -> bool:
+    def predict(self, vector) -> np.array:
         vector = np.array(vector)
         args = self.parser.parse_args()
         try:
