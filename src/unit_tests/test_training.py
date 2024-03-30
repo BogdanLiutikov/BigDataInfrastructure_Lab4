@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import sys
 import unittest
 from configparser import ConfigParser
@@ -24,6 +25,13 @@ class TestMultiModel(unittest.TestCase):
         y_train = pd.read_csv(self.config.get('data.splited', 'y_train'))
         trained_model = self.trainer.train(x_train, y_train)
         self.assertIs(self.model, trained_model)
+
+    def test_eval(self):
+        x_train = pd.read_csv(self.config.get('data.splited', 'x_train'))
+        y_train = pd.read_csv(self.config.get('data.splited', 'y_train'))
+        self.trainer.train(x_train, y_train)
+        result = self.trainer.eval()
+        self.assertTrue(result)
 
 
 if __name__ == "__main__":

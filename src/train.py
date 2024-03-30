@@ -31,6 +31,7 @@ class Trainer:
         self.config['models.fitted'] = {model_name: save_path.as_posix()}
         with open('config.ini', 'w') as configfile:
             self.config.write(configfile)
+        return True
 
     def eval(self):
         data_split = self.config['data.splited']
@@ -43,6 +44,7 @@ class Trainer:
         predicts = self.model.predict(x_test)
         print(confusion_matrix(y_test, predicts))
         print(classification_report(y_test, predicts))
+        return True
 
 
 if __name__ == '__main__':
@@ -59,5 +61,5 @@ if __name__ == '__main__':
     save_path = Path(config.get('models', 'save_dir')).joinpath(
         "RandomForestClassifier.pkl")
     trainer.save_model(save_path)
-
+    print('Model evaluate')
     trainer.eval()

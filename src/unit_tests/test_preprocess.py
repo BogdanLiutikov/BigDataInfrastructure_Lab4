@@ -8,6 +8,7 @@ import pandas as pd
 
 from ..preprocess import DataPreprocessor
 
+
 class TestMultiModel(unittest.TestCase):
 
     def setUp(self) -> None:
