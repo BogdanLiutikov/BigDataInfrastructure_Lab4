@@ -42,12 +42,10 @@ class DataPreprocessor:
         X_test.to_csv(X_test_path, index=False)
         y_train.to_csv(y_train_path, index=False)
         y_test.to_csv(y_test_path, index=False)
-        print(self.config)
         self.config['data.splited'] = {'X_train': X_train_path,
                                        'X_test': X_test_path,
                                        'y_train': y_train_path,
                                        'y_test': y_test_path}
-        print(self.config['data.splited'])
         with open('config.ini', 'w') as c:
             self.config.write(c)
 
@@ -56,7 +54,9 @@ if __name__ == "__main__":
     config = ConfigParser()
     config.read('config.ini')
     data_preprocessor = DataPreprocessor(config)
+    print('Preprocessing...')
     data_preprocessor.split_data(test_size=config.getfloat('data.preprocess', 'test_size'),
                                  seed=config.getint('data.preprocess', 'seed'))
     data_preprocessor.standard_data()
     data_preprocessor.save_data(config.get('data.preprocess', 'output_path'))
+    print('Preprocessing finished')
