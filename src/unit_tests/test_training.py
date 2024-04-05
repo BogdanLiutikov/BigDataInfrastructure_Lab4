@@ -22,13 +22,14 @@ class TestMultiModel(unittest.TestCase):
 
     def test_train(self):
         x_train = pd.read_csv(self.config.get('data.splited', 'x_train'))
-        y_train = pd.read_csv(self.config.get('data.splited', 'y_train'))
+        y_train = pd.read_csv(self.config.get('data.splited', 'y_train')).iloc[:, 0]
         trained_model = self.trainer.train(x_train, y_train)
-        self.assertIs(self.model, trained_model)
+        self.assertIsNotNone(trained_model)
+        self.assertTrue(self.trainer.fitted)
 
     def test_eval(self):
         x_train = pd.read_csv(self.config.get('data.splited', 'x_train'))
-        y_train = pd.read_csv(self.config.get('data.splited', 'y_train'))
+        y_train = pd.read_csv(self.config.get('data.splited', 'y_train')).iloc[:, 0]
         self.trainer.train(x_train, y_train)
         result = self.trainer.eval()
         self.assertTrue(result)

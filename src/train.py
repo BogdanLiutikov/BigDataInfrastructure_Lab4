@@ -13,10 +13,12 @@ class Trainer:
     def __init__(self, config: ConfigParser, model: BaseEstimator) -> None:
         self.config = config
         self.model = model
+        self.fitted = False
 
     def train(self, X_train: pd.DataFrame, y_train: pd.DataFrame, save_path: str | None = None) -> BaseEstimator:
         print('Training...')
         self.model = self.model.fit(X_train, y_train)
+        self.fitted = True
 
         print('Training finished')
         if save_path:
