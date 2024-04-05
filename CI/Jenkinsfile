@@ -39,14 +39,14 @@ options {
             steps {
                 script {
                     try {
-                        bat 'chcp 65001 && cd BigDataInfrastructure_Lab1 && docker-compose build'
+                        bat 'chcp 65001 && cd BigDataInfrastructure_Lab1 && docker compose build'
                         }
 
                     finally {
                     bat '''
                         chcp 65001
                         cd BigDataInfrastructure_Lab1
-                        docker-compose up -d
+                        docker compose up -d
                         '''
                         }
 				    }
@@ -62,8 +62,8 @@ options {
             steps {
                 dir("BigDataInfrastructure_Lab1") {
                         bat '''
-                            docker-compose up -d
-                            for /f %%i in ('docker ps -qf "name=^mle-template-web-1"') do set containerId=%%i
+                            docker compose up -d
+                            for /f %%i in ('docker ps -qf "name=^my-mle-template-container"') do set containerId=%%i
                             echo %containerId%
                             IF "%containerId%" == "" (
                                 echo "No container running"
@@ -78,9 +78,9 @@ options {
 
         stage('Checkout coverage report'){
             steps{
-                dir("mle-template"){
+                dir("BigDataInfrastructure_Lab1"){
                     bat '''
-                    docker-compose logs -t --tail 10
+                    docker compose logs -t --tail 10
                     '''
                 }
             }

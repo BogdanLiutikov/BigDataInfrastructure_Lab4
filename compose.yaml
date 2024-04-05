@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   web:
+    container_name: my-mle-template-container
     build: .
     command: bash -c "python src/preprocess.py && python src/train.py && python src/predict.py -m RandomForestClassifier -t smoke && coverage run -m src.unit_tests.test_preprocess && coverage run -m -a src.unit_tests.test_training && coverage report -m"
     ports:
