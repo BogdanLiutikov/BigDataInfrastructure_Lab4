@@ -1,15 +1,10 @@
-import os
-import sys
 import unittest
 from configparser import ConfigParser
-
-import numpy as np
-import pandas as pd
 
 from ..preprocess import DataPreprocessor
 
 
-class TestMultiModel(unittest.TestCase):
+class TestPreprocess(unittest.TestCase):
 
     def setUp(self) -> None:
         self.config = ConfigParser()

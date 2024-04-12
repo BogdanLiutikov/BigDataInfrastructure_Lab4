@@ -1,15 +1,10 @@
-import os
-from pathlib import Path
-import sys
 import unittest
 from configparser import ConfigParser
 
-import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 
 from ..train import Trainer
-
-from sklearn.ensemble import RandomForestClassifier
 
 
 class TestMultiModel(unittest.TestCase):
