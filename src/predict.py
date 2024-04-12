@@ -41,8 +41,7 @@ class Predictor():
             print(e)
             sys.exit(1)
 
-    def predict(self, vector) -> np.array:
-        vector = np.array(vector)
+    def predict(self, vector: list[list[float]]) -> np.array:
         return self.model.predict(vector)
 
     def test(self):
