@@ -1,3 +1,4 @@
+import warnings
 from configparser import ConfigParser
 from typing import Any
 
@@ -9,6 +10,10 @@ from .predict import Predictor
 
 app = FastAPI()
 
+config = ConfigParser()
+config.read('config.ini')
+predictor = Predictor.from_pretrained(config)
+
 
 class PredictModel(BaseModel):
     x: list[list[float]] = Field(..., example=[
@@ -16,21 +21,17 @@ class PredictModel(BaseModel):
     y: list[float] | None = None
 
 
-predictor = Predictor()
-
-
 @app.post("/predict")
 def predict(items: PredictModel):
     x = items.x
-    if items.y:
-        y_true = items.y
-    y_pred = predictor.predict(x).tolist()
+    y_true = items.y
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        y_pred = predictor.predict(x).tolist()
     return {'x': x, 'y_pred': y_pred, 'y_true': y_true}
 
 
 if __name__ == "__main__":
-    config = ConfigParser()
-    config.read('config.ini')
     adress = config.get('server', 'adress')
     port = config.getint('server', 'port')
     uvicorn.run('src.server:app', host=adress, port=port, reload=True)

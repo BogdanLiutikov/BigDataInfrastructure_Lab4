@@ -13,17 +13,16 @@ SHOW_LOG = True
 
 class Predictor():
 
-    def __init__(self) -> None:
+    def __init__(self, config: ConfigParser) -> None:
         logger = Logger(SHOW_LOG)
         self.log = logger.get_logger(__name__)
-        self.config = ConfigParser()
-        self.config.read("config.ini")
+        self.config = config
         self.parser = argparse.ArgumentParser(description="Predictor")
         self.parser.add_argument("-m",
                                  "--model",
                                  type=str,
                                  help="Select model",
-                                 required=True,
+                                 required=False,
                                  default="RandomForestClassifier",
                                  nargs="?",
                                  choices=["RandomForestClassifier"])
@@ -48,6 +47,10 @@ class Predictor():
         except FileNotFoundError as e:
             self.log.error(e)
             sys.exit(1)
+
+    @classmethod
+    def from_pretrained(cls, config: ConfigParser):
+        return cls(config)
 
     def predict(self, vector: list[list[float]]) -> np.array:
         vector = self.standard_scaler.transform(vector)
@@ -74,5 +77,7 @@ class Predictor():
 
 
 if __name__ == "__main__":
-    predictor = Predictor()
+    config = ConfigParser()
+    config.read("config.ini")
+    predictor = Predictor(config)
     predictor.test()
