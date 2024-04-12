@@ -7,10 +7,15 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
+from .logger import Logger
+SHOW_LOG = True
+
 
 class Predictor():
 
     def __init__(self) -> None:
+        logger = Logger(SHOW_LOG)
+        self.log = logger.get_logger(__name__)
         self.config = ConfigParser()
         self.config.read("config.ini")
         self.parser = argparse.ArgumentParser(description="Predictor")
@@ -37,11 +42,15 @@ class Predictor():
             model_path = self.config.get('models.fitted', args.model)
             with open(model_path, "rb") as model:
                 self.model: BaseEstimator = pickle.load(model)
+            scaler_path = self.config.get('models.fitted', 'StandardScaler')
+            with open(scaler_path, "rb") as scaler:
+                self.standard_scaler: BaseEstimator = pickle.load(scaler)
         except FileNotFoundError as e:
-            print(e)
+            self.log.error(e)
             sys.exit(1)
 
     def predict(self, vector: list[list[float]]) -> np.array:
+        vector = self.standard_scaler.transform(vector)
         return self.model.predict(vector)
 
     def test(self):
@@ -57,11 +66,11 @@ class Predictor():
         if args.tests == "smoke":
             try:
                 score = self.model.score(x_test, y_test)
-                print(f'{args.model} has {score} score')
+                self.log.info(f'{args.model} has {score} score')
             except Exception as e:
-                print(e)
+                self.log.error(e)
                 sys.exit(1)
-            print(f'{args.model} passed smoke tests')
+            self.log.info(f'{args.model} passed smoke tests')
 
 
 if __name__ == "__main__":

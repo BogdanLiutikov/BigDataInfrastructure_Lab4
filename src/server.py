@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from predict import Predictor
+from .predict import Predictor
 
 app = FastAPI()
 
@@ -33,4 +33,4 @@ if __name__ == "__main__":
     config.read('config.ini')
     adress = config.get('server', 'adress')
     port = config.getint('server', 'port')
-    uvicorn.run('server:app', host=adress, port=port, reload=True)
+    uvicorn.run('src.server:app', host=adress, port=port, reload=True)
