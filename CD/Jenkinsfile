@@ -38,6 +38,14 @@ options {
                 '''
             }
         }
+
+        stage('Run functional tests'){
+            steps{
+                bat '''
+                        dcoker exec -it mle-template bash && python -m src.func_test.api_test
+                '''
+            }
+        }
 	}
 
     post {
