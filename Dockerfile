@@ -8,5 +8,4 @@ COPY . /app
 
 RUN pip install -r requirements.txt
 
-RUN pip freeze
-CMD ["python", "src/server.py", "-m", "RandomForestClassifier"]
+# CMD ["python", "src/server.py", "-m", "RandomForestClassifier"] # compose command
