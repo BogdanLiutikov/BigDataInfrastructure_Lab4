@@ -34,7 +34,7 @@ options {
         stage('Run container'){
             steps{
                 bat '''
-                        docker run --name mle-template -p 80:5556 -d bogdanliutikov/firstdockerfile:latest
+                        docker run --rm --name mle-template -p 80:5556 -d bogdanliutikov/firstdockerfile:latest
                 '''
             }
         }
@@ -42,7 +42,7 @@ options {
         stage('Run functional tests'){
             steps{
                 bat '''
-                        docker exec -it mle-template bash && python -m src.func_test.api_test
+                        docker run --rm -it --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash && python -m src.func_test.api_test && docker logs --tail 20
                 '''
             }
         }
