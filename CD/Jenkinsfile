@@ -42,7 +42,8 @@ options {
         stage('Run functional tests'){
             steps{
                 bat '''
-                        docker run --rm -it --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash && python -m src.func_test.api_test && docker logs --tail 20
+                        docker run --rm -it --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash
+                        python -m src.func_test.api_test && exit
                 '''
             }
         }
