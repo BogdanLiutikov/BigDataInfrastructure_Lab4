@@ -43,9 +43,9 @@ options {
         stage('Run functional tests'){
             steps{  
                 bat '''
-                        chcp 65001
-                        docker run --rm -it --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash
-                        ls && python -m src.func_test.api_test && exit
+                        chcp 65001 && dir
+                        docker run --rm -i --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash
+                        python -m src.func_test.api_test && exit
                 '''
             }
         }
