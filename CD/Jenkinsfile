@@ -40,10 +40,10 @@ options {
         }
 
         stage('Run functional tests'){
-            steps{
+            steps{  
                 bat '''
                         docker run --rm -it --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash
-                        python -m src.func_test.api_test && exit
+                        ls && python -m src.func_test.api_test && exit
                 '''
             }
         }
@@ -51,7 +51,7 @@ options {
 
     post {
         always {
-            bat 'docker stop mle-template && docker logout'
+            bat 'docker logout'
         }
     }
 }
