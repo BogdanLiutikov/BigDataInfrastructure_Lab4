@@ -26,7 +26,6 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        chcp 65001 && dir
                         docker pull bogdanliutikov/firstdockerfile:latest
                 '''
             }
@@ -35,7 +34,7 @@ options {
         stage('Run container'){
             steps{
                 bat '''
-                        docker run --rm --name mle-template -p 80:5556 -d bogdanliutikov/firstdockerfile:latest
+                        docker run --rm --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest
                 '''
             }
         }
@@ -43,9 +42,7 @@ options {
         stage('Run functional tests'){
             steps{  
                 bat '''
-                        chcp 65001 && dir
-                        docker run --rm -i --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest bash
-                        python -m src.func_test.api_test && exit
+                        docker run --rm --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest python -m src.func_test.api_test
                 '''
             }
         }
