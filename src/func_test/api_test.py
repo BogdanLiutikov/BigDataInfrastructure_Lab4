@@ -21,9 +21,9 @@ class FunctionalApiTest():
         test_path = os.path.join(self.test_dir, test_name)
         with open(test_path, 'r') as f:
             data: dict = json.load(f)
+        data["y_true"] = data.pop("y")
 
         expected = data.copy()
-        expected["y_true"] = expected.pop("y")
         expected["y_pred"] = expected["y_true"]
 
         response = self.client.post("/predict", json=data)

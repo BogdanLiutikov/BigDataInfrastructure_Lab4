@@ -30,8 +30,8 @@ def predict(items: PredictionModel, session: Session = Depends(db.get_session)):
         warnings.simplefilter("ignore", category=UserWarning)
         y_pred = predictor.predict(x).tolist()
     result = PredictedModel(x=x, y_pred=y_pred, y_true=y_true)
-    result = db.create_record(session, result)
-    return result
+    db.create_record(session, result)
+    return {"x": result.x, "y_true": result.y_true, "y_pred": result.y_pred}
 
 
 @app.get('/predictions', response_model=list[PredictedModel])
