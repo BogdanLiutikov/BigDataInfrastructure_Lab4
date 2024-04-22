@@ -1,37 +1,48 @@
+import json
 import warnings
 from configparser import ConfigParser
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from fastapi import Depends, FastAPI
+from sqlalchemy.orm import Session
+
+from .database import Database
 
 from .predict import Predictor
+from .schemas import PredictionModel, PredictedModel
 
 app = FastAPI()
 
 config = ConfigParser()
 config.read('config.ini')
 predictor = Predictor.from_pretrained(config)
-
-
-class PredictModel(BaseModel):
-    x: list[list[float]] = Field(..., example=[
-                                 [3.6216, 8.6661, -2.8073, -0.44699]])
-    y: list[float] | None = None
+db = Database()
 
 
 @app.post("/predict")
-def predict(items: PredictModel):
+def predict(items: PredictionModel, session: Session = Depends(db.get_session)):
     x = items.x
-    y_true = items.y
+    y_true = items.y_true
+    if y_true is None:
+        y_true = [None] * len(x)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
         y_pred = predictor.predict(x).tolist()
-    return {'x': x, 'y_pred': y_pred, 'y_true': y_true}
+    result = PredictedModel(x=x, y_pred=y_pred, y_true=y_true)
+    result = db.create_record(session, result)
+    return result
+
+
+@app.get('/predictions', response_model=list[PredictedModel])
+def get_predictions(session: Session = Depends(db.get_session)):
+    records = db.get_predictions(session)
+    for record in records:
+        record.x = json.loads(record.x)
+    return records
 
 
 if __name__ == "__main__":
     adress = config.get('server', 'adress')
     port = config.getint('server', 'port')
-    uvicorn.run('src.server:app', host=adress, port=port, reload=True)
+    uvicorn.run('src.server:app', host=adress, port=port, reload=False)

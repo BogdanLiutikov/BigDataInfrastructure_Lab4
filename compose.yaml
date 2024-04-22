@@ -6,8 +6,48 @@ services:
     command: bash -c "python -m src.preprocess && python -m src.train && python -m src.predict -m RandomForestClassifier -t smoke && coverage run -m src.unit_tests.test_preprocess && coverage run -m -a src.unit_tests.test_training && coverage report -m"
     ports:
       - 8000:8000
-    image: bogdanliutikov/firstdockerfile:latest
+    image: bogdanliutikov/lab2:latest
     volumes:
       - type: bind
         source: .
         target: /app
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_USER: ${MSSQL_USER}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      TZ: Europe/Moscow
+    networks:
+      - sharenetwork
+    depends_on:
+      # - database
+      database:
+        condition: service_healthy
+
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - 1433:1433
+    container_name: mssql
+    hostname: mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      TZ: Europe/Moscow
+    networks:
+      - sharenetwork
+    healthcheck:
+        test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "${MSSQL_USER}", "-P", "${MSSQL_SA_PASSWORD}"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+    volumes:
+      - type: volume
+        source: db-data
+        target: /var/opt/mssql
+
+volumes:
+  db-data:
+
+networks:
+  sharenetwork:
+    driver: bridge
