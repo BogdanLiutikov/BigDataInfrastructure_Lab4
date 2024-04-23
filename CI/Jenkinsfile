@@ -35,24 +35,25 @@ options {
 
         stage('Create and run docker container') {
             steps {
-                script {
-                    def composeTemplate = readFile('compose.yaml.j2')
-                    def renderedContent = composeTemplate.replaceAll('\\{\\{ command \\}\\}', 'bash -c "python -m src.preprocess && python -m src.train && python -m src.predict -m RandomForestClassifier -t smoke && coverage run -m src.unit_tests.test_preprocess && coverage run -m -a src.unit_tests.test_training && coverage report -m"')
-                    writeFile file: 'compose.yaml', text: renderedContent
-                    try {
-                        bat 'chcp 65001 && cd BigDataInfrastructure_Lab2 && docker compose build'
-                        }
+                dir ('BigDataInfrastructure_Lab2') {
+                    script {
+                        def composeTemplate = readFile('compose.yaml.j2')
+                        def renderedContent = composeTemplate.replaceAll('\\{\\{ command \\}\\}', 'bash -c "python -m src.preprocess && python -m src.train && python -m src.predict -m RandomForestClassifier -t smoke && coverage run -m src.unit_tests.test_preprocess && coverage run -m -a src.unit_tests.test_training && coverage report -m"')
+                        writeFile file: 'compose.yaml', text: renderedContent
+                        try {
+                            bat 'chcp 65001 && docker compose build'
+                            }
 
-                    finally {
-                    bat '''
-                        chcp 65001
-                        cd BigDataInfrastructure_Lab2
-                        echo MSSQL_USER=\"%DB_CREDS_USR%\" > .env
-                        echo MSSQL_SA_PASSWORD=\"%DB_CREDS_PSW%\" >> .env
-                        docker compose up -d
-                        '''
+                        finally {
+                        bat '''
+                            chcp 65001
+                            echo MSSQL_USER=\"%DB_CREDS_USR%\" > .env
+                            echo MSSQL_SA_PASSWORD=\"%DB_CREDS_PSW%\" >> .env
+                            docker compose up -d
+                            '''
+                            }
                         }
-				    }
+                    }
                 }
             }
 
@@ -75,7 +76,7 @@ options {
 
     post {
         always {
-            bat 'docker compose down'
+            bat 'cd BigDataInfrastructure_Lab2 && docker compose down'
             bat 'chcp 65001 && docker logout'
         }
     }

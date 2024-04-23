@@ -1,9 +1,3 @@
-@NonCPS
-def renderTemplate(templateText, context) {
-    def engine = new groovy.text.SimpleTemplateEngine()
-    def template = engine.createTemplate(templateText).make(context)
-    return template.toString()
-}
 pipeline {
     agent any
 
@@ -38,6 +32,7 @@ options {
 
         stage('Run container'){
             steps{
+                bat 'curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab2/main/compose.yaml.j2 -o compose.yaml.j2'
                 script {
                     def composeTemplate = readFile('compose.yaml.j2')
                     def renderedContent = composeTemplate.replaceAll('\\{\\{ command \\}\\}', 'python -m src.server')
