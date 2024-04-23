@@ -1,7 +1,7 @@
 import json
 import os
 
-from sqlalchemy import URL, create_engine, text
+from sqlalchemy import URL, create_engine, text, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from . import models, schemas
@@ -83,3 +83,8 @@ class Database:
 
     def get_predictions(self, db: Session):
         return db.query(models.Predict).all()
+    
+    def get_last_prediction(self, db: Session) -> models.Predict:
+        stmt = select(models.Predict).order_by(models.Predict.datatime.desc())
+        execute = db.scalars(stmt).first()
+        return execute

@@ -33,9 +33,20 @@ class FunctionalApiTest():
 
         self.log.info(f'Functional {test_name} passed')
 
+    def test_db_write(self):
+        x1, x2, x3, x4 = -0.25, -0.1, 0.1, 0.25
+        response = self.client.post("/predict", json={"x": [[x1, x2, x3, x4]]})
+        record = self.client.get("/prediction/last")
+        r = record.json()['x']
+        assert r == [x1, x2, x3, x4], f"Expected: {[x1, x2, x3, x4]}\nbut got: {r}"
+        
+        self.log.info(f'DB write test passed')
+        
+
     def test_all(self):
         for test in os.listdir(self.test_dir):
             self.test_predict(test)
+        self.test_db_write()
 
 
 if __name__ == "__main__":

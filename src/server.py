@@ -5,6 +5,7 @@ from typing import Any
 
 import uvicorn
 from fastapi import Depends, FastAPI
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from .database import Database
@@ -41,8 +42,16 @@ def get_predictions(session: Session = Depends(db.get_session)):
         record.x = json.loads(record.x)
     return records
 
+@app.get('/prediction/last', response_model=PredictedModel | dict)
+def get_last_prediction(session: Session = Depends(db.get_session)):
+    record = db.get_last_prediction(session)
+    if record is None:
+        return {"Error": "No one record in DB"}
+    record.x = json.loads(record.x)
+    return record
+
 
 if __name__ == "__main__":
     adress = config.get('server', 'adress')
     port = config.getint('server', 'port')
-    uvicorn.run('src.server:app', host=adress, port=port, reload=False)
+    uvicorn.run('src.server:app', host=adress, port=port, reload=True)
