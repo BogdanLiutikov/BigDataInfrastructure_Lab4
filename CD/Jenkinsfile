@@ -1,12 +1,20 @@
+@NonCPS
+def renderTemplate(templateText, context) {
+    def engine = new groovy.text.SimpleTemplateEngine()
+    def template = engine.createTemplate(templateText).make(context)
+    return template.toString()
+}
 pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDS=credentials('mle-template')
+        DOCKERHUB_CREDS=credentials('credentials-lab2-docker')
+        DB_CREDS=credentials('credentials-lab2-db')
         LC_ALL = "en_US.UTF-8"
         LANG    = "en_US.UTF-8"
         LANGUAGE = "en_US.UTF-8"
     }
+    
 
 options {
         timestamps()
@@ -16,9 +24,6 @@ options {
 
         stage('Login'){
             steps{
-                //withCredentials([usernamePassword(credentialsId: 'mle-template', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]){
-                //bat 'chcp 65001 && echo %DOCKER_REGISTRY_PWD% | docker login -u %DOCKER_REGISTRY_USER% --password-stdin'}
-                //bat 'chcp 65001 && echo %DOCKERHUB_CREDS_PSW% | docker login -u %DOCKERHUB_CREDS_USR% --password-stdin'
                 bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
                 }
             }
@@ -26,15 +31,24 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        docker pull bogdanliutikov/firstdockerfile:latest
+                        docker pull bogdanliutikov/lab2:latest
                 '''
             }
         }
 
         stage('Run container'){
             steps{
+                script {
+                    def composeTemplate = readFile('compose.yaml.j2')
+                    def renderedContent = composeTemplate.replaceAll('\\{\\{ command \\}\\}', 'python -m src.server')
+                    writeFile file: 'compose.yaml', text: renderedContent
+                }
+                
                 bat '''
-                        docker run --rm --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest
+                        chcp 65001
+                        echo MSSQL_USER=\"%DB_CREDS_USR%\" > .env
+                        echo MSSQL_SA_PASSWORD=\"%DB_CREDS_PSW%\" >> .env
+                        docker compose up -d
                 '''
             }
         }
@@ -42,7 +56,7 @@ options {
         stage('Run functional tests'){
             steps{  
                 bat '''
-                        docker run --rm --name mle-template -p 80:5556 bogdanliutikov/firstdockerfile:latest python -m src.func_test.api_test
+                        docker compose exec web python -m src.func_test.api_test
                 '''
             }
         }
@@ -50,6 +64,7 @@ options {
 
     post {
         always {
+            bat 'docker compose down'
             bat 'docker logout'
         }
     }

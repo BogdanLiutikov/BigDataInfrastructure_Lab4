@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDS=credentials('mle-template')
+        DOCKERHUB_CREDS=credentials('credentials-lab2-docker')
+        DB_CREDS=credentials('credentials-lab2-db')
         LC_ALL = "en_US.UTF-8"
         LANG    = "en_US.UTF-8"
         LANGUAGE = "en_US.UTF-8"
@@ -16,21 +17,18 @@ options {
         stage('Clone github repository') {
             steps {
                 cleanWs()
-                bat 'chcp 65001 && git clone -b main https://github.com/BogdanLiutikov/BigDataInfrastructure_Lab1'
+                bat 'chcp 65001 && git clone -b main https://github.com/BogdanLiutikov/BigDataInfrastructure_Lab2'
 				}
 			}
 
         stage('Checkout repo dir') {
             steps {
-                bat 'chcp 65001 && cd BigDataInfrastructure_Lab1 && dir'
+                bat 'chcp 65001 && cd BigDataInfrastructure_Lab2 && dir'
 				}
 			}
 
         stage('Login'){
             steps{
-                //withCredentials([usernamePassword(credentialsId: 'mle-template', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]){
-                //bat 'chcp 65001 && echo %DOCKER_REGISTRY_PWD% | docker login -u %DOCKER_REGISTRY_USER% --password-stdin'}
-                //bat 'chcp 65001 && echo %DOCKERHUB_CREDS_PSW% | docker login -u %DOCKERHUB_CREDS_USR% --password-stdin'
                 bat 'chcp 65001 && docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
                 }
             }
@@ -38,14 +36,19 @@ options {
         stage('Create and run docker container') {
             steps {
                 script {
+                    def composeTemplate = readFile('compose.yaml.j2')
+                    def renderedContent = composeTemplate.replaceAll('\\{\\{ command \\}\\}', 'bash -c "python -m src.preprocess && python -m src.train && python -m src.predict -m RandomForestClassifier -t smoke && coverage run -m src.unit_tests.test_preprocess && coverage run -m -a src.unit_tests.test_training && coverage report -m"')
+                    writeFile file: 'compose.yaml', text: renderedContent
                     try {
-                        bat 'chcp 65001 && cd BigDataInfrastructure_Lab1 && docker compose build'
+                        bat 'chcp 65001 && cd BigDataInfrastructure_Lab2 && docker compose build'
                         }
 
                     finally {
                     bat '''
                         chcp 65001
-                        cd BigDataInfrastructure_Lab1
+                        cd BigDataInfrastructure_Lab2
+                        echo MSSQL_USER=\"%DB_CREDS_USR%\" > .env
+                        echo MSSQL_SA_PASSWORD=\"%DB_CREDS_PSW%\" >> .env
                         docker compose up -d
                         '''
                         }
@@ -53,32 +56,9 @@ options {
                 }
             }
 
-        // use for multi containers:
-        //docker exec %containerId% cd app && coverage run src/unit_tests/test_preprocess.py && coverage run -a src/unit_tests/test_training.py && coverage report -m
-        //use for single container (with auth):
-        //docker run --name mle-template_web_1 cd app && coverage run src/unit_tests/test_preprocess.py && coverage run -a src/unit_tests/test_training.py && coverage report -m
-
-        stage('Checkout container logs') {
-            steps {
-                dir("BigDataInfrastructure_Lab1") {
-                        bat '''
-                            docker compose up -d
-                            for /f %%i in ('docker ps -qf "name=^my-mle-template-container"') do set containerId=%%i
-                            echo %containerId%
-                            IF "%containerId%" == "" (
-                                echo "No container running"
-                            )
-                            ELSE (
-                                docker logs --tail 1000 -f %containerId%
-                                )
-                        '''
-                    }
-            }
-        }
-
         stage('Checkout coverage report'){
             steps{
-                dir("BigDataInfrastructure_Lab1"){
+                dir("BigDataInfrastructure_Lab2"){
                     bat '''
                     docker compose logs -t --tail 10
                     '''
@@ -88,13 +68,14 @@ options {
 
         stage('Push'){
             steps{
-                bat 'chcp 65001 && docker push bogdanliutikov/firstdockerfile:latest'
+                bat 'chcp 65001 && docker push bogdanliutikov/lab2:latest'
             }
         }
 	}
 
     post {
         always {
+            bat 'docker compose down'
             bat 'chcp 65001 && docker logout'
         }
     }
