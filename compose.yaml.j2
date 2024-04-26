@@ -1,27 +1,27 @@
 version: '3.8'
 services:
   web:
-    container_name: my-mle-template-container
+    container_name: mle-container
     build: .
     command: {{ command }}
     ports:
       - 8000:8000
-    image: bogdanliutikov/lab2:latest
+    image: bogdanliutikov/lab3:latest
     # volumes:
     #   - type: bind
     #     source: .
     #     target: /app
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_USER: ${MSSQL_USER}
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      VAULT_TOKEN: ${VAULT_TOKEN}
       TZ: Europe/Moscow
     networks:
       - sharenetwork
     depends_on:
-      # - database
       database:
         condition: service_healthy
+      vault:
+        condition: service_started
 
   database:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -39,14 +39,41 @@ services:
         test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "${MSSQL_USER}", "-P", "${MSSQL_SA_PASSWORD}"]
         interval: 30s
         timeout: 10s
-        retries: 5
+        retries: 10
     volumes:
       - type: volume
-        source: db-data
+        source: db-data-lab3
         target: /var/opt/mssql
 
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault-server
+    command: sh /vault/init/vault-init2.sh
+    # command: vault server -config=vault/config/config.hcl
+    ports:
+      - "8200:8200"
+      - "8201:8201"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      # VAULT_API_ADDR: "0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_TOKEN}
+      MSSQL_USER: ${VAULT_TOKEN}
+      MSSQL_SA_PASSWORD: ${VAULT_TOKEN}
+    volumes:
+    #   - type: bind
+    #     source: ./vault
+    #     target: /vault
+      - type: bind
+        source: ./vault/init
+        target: /vault/init
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - sharenetwork
+
 volumes:
-  db-data:
+  db-data-lab3:
 
 networks:
   sharenetwork:
