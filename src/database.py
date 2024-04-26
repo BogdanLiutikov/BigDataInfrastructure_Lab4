@@ -11,27 +11,35 @@ from .logger import Logger
 
 
 class Database:
-    def __init__(self, user, password) -> None:
+    def __init__(self) -> None:
         self.logger = Logger(True).get_logger(__name__)
 
+        cred = None
         user = None
         password = None
         retries = 5
+        
         for i in range(retries):
-            cred = request('get', 'http://vault-server:8200/v1/secret/data/db', headers={'X-Vault-Token': os.environ.get('VAULT_TOKEN')})
-            if cred.status_code == 200:
-                cred = cred.json()
-                user = cred['data']['data']['MSSQL_USER']
-                password = cred['data']['data']['MSSQL_SA_PASSWORD']
-                break
+            try:
+                cred = request('get', 'http://vault-server:8200/v1/secret/data/db', headers={'X-Vault-Token': os.environ.get('VAULT_TOKEN')})
+                if cred.status_code == 200:
+                    cred = cred.json()
+                    user = cred['data']['data']['MSSQL_USER']
+                    password = cred['data']['data']['MSSQL_SA_PASSWORD']
+                    break
+            except Exception as e:
+                self.logger.info(f'Error while getting credentials from Vauls — {e}. Try again')
+                sleep(3)
+                continue
             else:
                 self.logger.info('No credentiasl in Vault. Try again')
-                sleep(5)
+                sleep(3)
 
         if user and password:
-            self.logger.info('Get database credentials')
+            self.logger.info('Got database credentials from Vault')
         else:
-            self.logger.info(f'Cannot get credetials from Vault. Look at last request {cred.content}')
+            self.logger.error(f'Cannot get credetials from Vault. Look at last request {cred}')
+            return
 
         db_name = self.__create_database_through_master_database(user, password, 'Lab3')
         connection_url = URL.create(
