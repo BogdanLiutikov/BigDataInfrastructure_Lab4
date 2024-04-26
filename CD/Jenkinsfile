@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDS=credentials('credentials-lab2-docker')
-        DB_CREDS=credentials('credentials-lab2-db')
+        DOCKERHUB_CREDS=credentials('credentials-lab3-docker')
+        DB_CREDS=credentials('credentials-lab3-db')
+        VAULT_TOKEN=credentials('credentials-lab3-vault_token')
         LC_ALL = "en_US.UTF-8"
         LANG    = "en_US.UTF-8"
         LANGUAGE = "en_US.UTF-8"
@@ -25,14 +26,19 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        docker pull bogdanliutikov/lab2:latest
+                        docker pull bogdanliutikov/lab3:latest
                 '''
             }
         }
 
         stage('Run container'){
             steps{
-                bat 'curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab2/main/compose.yaml.j2 -o compose.yaml.j2'
+                bat 'curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab3/main/compose.yaml.j2 -o compose.yaml.j2'
+                bat '''
+                    chcp 65001
+                    mkdir vault\\init
+                    cd vault\\init && curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab3/main/vault/init/vault-init-dev.sh -o vault-init-dev.sh
+                '''
                 script {
                     def composeTemplate = readFile('compose.yaml.j2')
                     def renderedContent = composeTemplate.replaceAll('\\{\\{ command \\}\\}', 'python -m src.server')
@@ -43,6 +49,7 @@ options {
                         chcp 65001
                         echo MSSQL_USER=\"%DB_CREDS_USR%\" > .env
                         echo MSSQL_SA_PASSWORD=\"%DB_CREDS_PSW%\" >> .env
+                        echo VAULT_TOKEN=\"%VAULT_TOKEN%\" >> .env
                         docker compose up -d
                 '''
             }
