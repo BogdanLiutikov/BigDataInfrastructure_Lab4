@@ -48,7 +48,7 @@ services:
   vault:
     image: hashicorp/vault:latest
     container_name: vault-server
-    command: sh /vault/init/vault-init2.sh
+    command: sh /vault/init/vault-init-dev.sh
     # command: vault server -config=vault/config/config.hcl
     ports:
       - "8200:8200"
