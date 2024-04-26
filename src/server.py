@@ -1,6 +1,4 @@
 import json
-import os
-from fastapi import requests
 import warnings
 from configparser import ConfigParser
 from typing import Any
@@ -8,7 +6,6 @@ from typing import Any
 from httpx import request
 import uvicorn
 from fastapi import Depends, FastAPI
-from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from .database import Database
@@ -22,10 +19,7 @@ config = ConfigParser()
 config.read('config.ini')
 predictor = Predictor.from_pretrained(config)
 
-cred = request('get', 'http://vault-server:8200/v1/secret/data/db', headers={'X-Vault-Token': os.environ.get('VAULT_TOKEN')}).json()
-user = cred['data']['data']['MSSQL_USER']
-password = cred['data']['data']['MSSQL_SA_PASSWORD']
-db = Database(user, password)
+db = Database()
 
 
 @app.post("/predict")

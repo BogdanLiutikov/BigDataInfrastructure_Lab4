@@ -1,6 +1,8 @@
 import json
 import os
+from time import sleep
 
+from httpx import request
 from sqlalchemy import URL, create_engine, text, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -11,6 +13,26 @@ from .logger import Logger
 class Database:
     def __init__(self, user, password) -> None:
         self.logger = Logger(True).get_logger(__name__)
+
+        user = None
+        password = None
+        retries = 5
+        for i in range(retries):
+            cred = request('get', 'http://vault-server:8200/v1/secret/data/db', headers={'X-Vault-Token': os.environ.get('VAULT_TOKEN')})
+            if cred.status_code == 200:
+                cred = cred.json()
+                user = cred['data']['data']['MSSQL_USER']
+                password = cred['data']['data']['MSSQL_SA_PASSWORD']
+                break
+            else:
+                self.logger.info('No credentiasl in Vault. Try again')
+                sleep(5)
+
+        if user and password:
+            self.logger.info('Get database credentials')
+        else:
+            self.logger.info(f'Cannot get credetials from Vault. Look at last request {cred.content}')
+
         db_name = self.__create_database_through_master_database(user, password, 'Lab3')
         connection_url = URL.create(
             "mssql+pyodbc",
