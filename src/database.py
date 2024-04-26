@@ -9,13 +9,9 @@ from .logger import Logger
 
 
 class Database:
-    def __init__(self) -> None:
+    def __init__(self, user, password) -> None:
         self.logger = Logger(True).get_logger(__name__)
-
-        user = os.environ.get('MSSQL_USER')
-        password = os.environ.get('MSSQL_SA_PASSWORD')
-
-        db_name = self.__create_database_through_master_database(user, password, 'Lab2')
+        db_name = self.__create_database_through_master_database(user, password, 'Lab3')
         connection_url = URL.create(
             "mssql+pyodbc",
             username=user,
