@@ -1,4 +1,5 @@
 import json
+from threading import Thread
 import warnings
 from configparser import ConfigParser
 from typing import Any
@@ -12,6 +13,8 @@ from .database import Database
 
 from .predict import Predictor
 from .schemas import PredictionModel, PredictedModel
+from .kafka_consumer import KafkaConsumerDataBase
+from .kafka_producer import KafkaProducerImpl
 
 app = FastAPI()
 
@@ -20,6 +23,8 @@ config.read('config.ini')
 predictor = Predictor.from_pretrained(config)
 
 db = Database()
+kafka_producer = KafkaProducerImpl()
+kafka_consumer = KafkaConsumerDataBase(db)
 
 
 @app.post("/predict")
@@ -32,7 +37,8 @@ def predict(items: PredictionModel, session: Session = Depends(db.get_session)):
         warnings.simplefilter("ignore", category=UserWarning)
         y_pred = predictor.predict(x).tolist()
     result = PredictedModel(x=x, y_pred=y_pred, y_true=y_true)
-    db.create_record(session, result)
+    # db.create_record(session, result)
+    kafka_producer.send(result.model_dump_json())
     return {"x": result.x, "y_true": result.y_true, "y_pred": result.y_pred}
 
 
@@ -53,6 +59,9 @@ def get_last_prediction(session: Session = Depends(db.get_session)):
 
 
 if __name__ == "__main__":
+    db_consumer = Thread(target=kafka_consumer.listen, daemon=True)
+    db_consumer.start()
+
     adress = config.get('server', 'adress')
     port = config.getint('server', 'port')
     uvicorn.run('src.server:app', host=adress, port=port, reload=True)
