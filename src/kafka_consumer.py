@@ -1,18 +1,20 @@
 import json
+import os
 from time import sleep
+
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
-from .database import Database
-from .schemas import PredictedModel
 
+from .database import Database
 from .logger import Logger
+from .schemas import PredictedModel
 
 logger = Logger(True).get_logger(__name__)
 
 
 class KafkaConsumerImpl:
     def __init__(self, topic=None) -> None:
-        self.topic = 'main'
+        self.topic = os.environ.get('TOPIC_NAME')
         if topic is None:
             topic = self.topic
         self.consumer = KafkaConsumer(topic,
@@ -29,9 +31,8 @@ class KafkaConsumerImpl:
 
 class KafkaConsumerDataBase:
     def __init__(self, database: Database, topic=None) -> None:
-        # super().__init__(topic)
         self.database = database
-        self.topic = 'main'
+        self.topic = os.environ.get('TOPIC_NAME')
         if topic is None:
             topic = self.topic
         self.consumer = KafkaConsumer(topic,
@@ -45,9 +46,7 @@ class KafkaConsumerDataBase:
         logger.info('Start listen')
         try:
             while True:
-                print(f'{self.consumer.bootstrap_connected()=}')
                 messages = self.consumer.poll(timeout_ms=1000)
-                print('consumer_message:', messages, flush=True)
                 if messages is None or messages == {}:
                     sleep(3)
                     continue

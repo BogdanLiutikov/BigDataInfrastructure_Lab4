@@ -8,6 +8,7 @@ from httpx import request
 import uvicorn
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
+from kafka.admin import NewTopic
 
 from .database import Database
 
@@ -15,6 +16,7 @@ from .predict import Predictor
 from .schemas import PredictionModel, PredictedModel
 from .kafka_consumer import KafkaConsumerDataBase
 from .kafka_producer import KafkaProducerImpl
+from .kafka_service import KafkaService
 
 app = FastAPI()
 
@@ -23,6 +25,7 @@ config.read('config.ini')
 predictor = Predictor.from_pretrained(config)
 
 db = Database()
+KafkaService()
 kafka_producer = KafkaProducerImpl()
 kafka_consumer = KafkaConsumerDataBase(db)
 

@@ -1,5 +1,7 @@
 import json
+import os
 from time import sleep
+
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
@@ -11,7 +13,7 @@ logger = Logger(True).get_logger(__name__)
 class KafkaProducerImpl:
     def __init__(self) -> None:
         self.producer = KafkaProducer(bootstrap_servers=['kafka:9092'])
-        self.topic = 'main'
+        self.topic = os.environ.get('TOPIC_NAME')
 
     def send(self, message, key=None, topic=None):
 
