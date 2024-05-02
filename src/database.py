@@ -41,7 +41,7 @@ class Database:
             self.logger.error(f'Cannot get credetials from Vault. Look at last request {cred}')
             return
 
-        db_name = self.__create_database_through_master_database(user, password, 'Lab3')
+        db_name = self.__create_database_through_master_database(user, password, 'Lab4')
         connection_url = URL.create(
             "mssql+pyodbc",
             username=user,
@@ -67,7 +67,7 @@ class Database:
         models.Base.metadata.create_all(self.engine)
         self.logger.info("Все таблицы созданы")
 
-    def __create_database_through_master_database(self, user, password, database_name: str = 'Lab2'):
+    def __create_database_through_master_database(self, user, password, database_name: str = 'Lab'):
         connection_url = URL.create(
             "mssql+pyodbc",
             username=user,

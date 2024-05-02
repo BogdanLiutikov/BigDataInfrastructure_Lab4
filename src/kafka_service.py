@@ -12,7 +12,7 @@ class KafkaService:
     def __init__(self) -> None:
         topic_name = os.environ.get('TOPIC_NAME')
         admin_client = KafkaAdminClient(bootstrap_servers="kafka:9092")
-        topics = [NewTopic(topic_name, num_partitions=3, replication_factor=1)]
+        topics = [NewTopic(topic_name, num_partitions=1, replication_factor=1)]
 
         try:
             admin_client.create_topics(topics)
