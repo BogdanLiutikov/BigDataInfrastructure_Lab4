@@ -1,5 +1,6 @@
 import json
 import os
+from time import sleep
 
 from fastapi.testclient import TestClient
 
@@ -36,6 +37,7 @@ class FunctionalApiTest():
     def test_db_write(self):
         x1, x2, x3, x4 = -0.25, -0.1, 0.1, 0.25
         response = self.client.post("/predict", json={"x": [[x1, x2, x3, x4]]})
+        sleep(3)
         record = self.client.get("/prediction/last")
         r = record.json()['x']
         assert r == [x1, x2, x3, x4], f"Expected: {[x1, x2, x3, x4]}\nbut got: {r}"

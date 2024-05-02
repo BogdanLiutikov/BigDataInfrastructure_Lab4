@@ -48,7 +48,7 @@ class KafkaConsumerDataBase:
             while True:
                 messages = self.consumer.poll(timeout_ms=1000)
                 if messages is None or messages == {}:
-                    sleep(3)
+                    sleep(0.1)
                     continue
 
                 for topic_partition, records in messages.items():
