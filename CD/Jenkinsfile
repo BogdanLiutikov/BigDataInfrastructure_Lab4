@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDS=credentials('credentials-lab3-docker')
-        DB_CREDS=credentials('credentials-lab3-db')
-        VAULT_TOKEN=credentials('credentials-lab3-vault_token')
+        DOCKERHUB_CREDS=credentials('credentials-lab4-docker')
+        DB_CREDS=credentials('credentials-lab4-db')
+        VAULT_TOKEN=credentials('credentials-lab4-vault_token')
+        TOPIC_NAME=credentials('credentials-lab4-topic_name')
         LC_ALL = "en_US.UTF-8"
         LANG    = "en_US.UTF-8"
         LANGUAGE = "en_US.UTF-8"
@@ -26,18 +27,18 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        docker pull bogdanliutikov/lab3:latest
+                        docker pull bogdanliutikov/lab4:latest
                 '''
             }
         }
 
         stage('Run container'){
             steps{
-                bat 'curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab3/main/compose.yaml.j2 -o compose.yaml.j2'
+                bat 'curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab4/main/compose.yaml.j2 -o compose.yaml.j2'
                 bat '''
                     chcp 65001
                     mkdir vault\\init
-                    cd vault\\init && curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab3/main/vault/init/vault-init-dev.sh -o vault-init-dev.sh
+                    cd vault\\init && curl https://raw.githubusercontent.com/BogdanLiutikov/BigDataInfrastructure_Lab4/main/vault/init/vault-init-dev.sh -o vault-init-dev.sh
                 '''
                 script {
                     def composeTemplate = readFile('compose.yaml.j2')
@@ -50,6 +51,7 @@ options {
                         echo MSSQL_USER=\"%DB_CREDS_USR%\" > .env
                         echo MSSQL_SA_PASSWORD=\"%DB_CREDS_PSW%\" >> .env
                         echo VAULT_TOKEN=\"%VAULT_TOKEN%\" >> .env
+                        echo TOPIC_NAME=\"%TOPIC_NAME%\" >> .env
                         docker compose up -d
                 '''
             }
@@ -59,6 +61,9 @@ options {
             steps{  
                 bat '''
                         docker compose exec web python -m src.func_test.api_test
+                        docker compose logs kafka --tail 100
+                        docker compose logs database --tail 100
+                        docker compose logs web --tail 100
                 '''
             }
         }
